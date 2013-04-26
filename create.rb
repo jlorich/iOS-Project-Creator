@@ -2,7 +2,6 @@ require 'find'
 require 'fileutils'
 require 'rubygems'
 require 'cocoapods'
-require 'debugger'
 
 renameable_content_extensions = [
   ".h", ".m", ".c", ".cpp", ".xib",
