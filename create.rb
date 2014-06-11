@@ -2,6 +2,7 @@ require 'find'
 require 'fileutils'
 require 'rubygems'
 require 'cocoapods'
+require 'pathname'
 
 renameable_content_extensions = [
   ".h", ".m", ".c", ".cpp", ".xib",
@@ -27,13 +28,13 @@ if !ARGV[0]
   exit
 end
 
-if ARGV[0] !~ /^[A-Za-z0-9]+$/
-  puts "Your project name must be alpha number and have no spaces"
+if ARGV[0] !~ /^[A-Za-z]{1}[A-Za-z0-9]+$/
+  puts "Your project name must be alpha numeric (staring with a letter) and have no spaces"
   exit
 end
 
-if ARGV[1] !~ /^[A-Za-z]+$/
-  puts "Your project prefix must uppercase letters only with no spaces"
+if ARGV[1] !~ /^[A-Z]{2,}$/
+  puts "Your project prefix must be two or more uppercase letters"
   exit
 end
 
@@ -59,7 +60,10 @@ end
 # Clone repo
 #
 puts 'Cloning base iOS project repository'
+
 command = 'git clone git@github.com:cloudspace/Cloudspace-iOS.git \'./' + project_name + '\''
+#command = 'git clone --no-hardlinks ./Cloudspace-iOS \'./' + project_name + '\''
+result = `cd ./#{project_name} && git checkout master && cd ../`
 result = `#{command}`
 
 #
@@ -69,8 +73,9 @@ puts 'Replacing git repository with new init'
 FileUtils.rm_rf('./' + project_name + '/.git')
 result = `git init`
 
+puts 'Adding the base repository as an upstream remote'
+result = `git remote add upstream git@github.com:cloudspace/Cloudspace-iOS.git`
 
-require 'pathname'
 
 def find_depth_first(pathname)
   acc = []
@@ -106,19 +111,22 @@ find_depth_first(Pathname('./' + project_name)) { |path|
 
     path.rename(new_path) if new_path != path
   end
-
-  
-
 }
 
 #
 # Update pods
 #
 puts 'Updating pods'
-puts `cd ./#{project_name};pod install`
+IO.popen("cd ./#{project_name} && pod install") do |io|
+  io.each do |line|
+    puts line
+  end
+end
 
 puts
 puts '------------------------------------------------'
 puts 'Your project is now ready for use.'
 puts 'Open ' + project_name + '.xcworkspace to begin'
 puts '------------------------------------------------'
+
+exit(0)
